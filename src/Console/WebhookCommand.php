@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Chargebee\Cashier\Cashier;
 use Symfony\Component\Console\Attribute\AsCommand;
 
-#[AsCommand(name: 'cashier:webhook')]
+#[AsCommand(name: 'cashier:create-webhook')]
 class WebhookCommand extends Command
 {
     public const DEFAULT_EVENTS = [
@@ -18,17 +18,14 @@ class WebhookCommand extends Command
     ];
     public const DEFAULT_NAME = "cashier-webhook-endpoint";
 
-    public const  DEFAULT_AUTH_PASSWORD = "default_password";
-
-    public const  DEFAULT_AUTH_USERNAME = "default_username";
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'cashier:webhook
+    protected $signature = 'cashier:create-webhook
             {--disabled : Immediately disable the webhook after creation}
-            {--url= : The full URL of the webhook endpoint.}
+            {--url= : The full URL of the webhook endpoint}
             {--api-version= : The Chargebee API version the webhook should use}
     ';
 
@@ -46,6 +43,10 @@ class WebhookCommand extends Command
      */
     public function handle()
     {
+        if(!config('cashier.webhook.password') || !config('cashier.webhook.username')) {
+            $this->error('Webhook authentication credentials are missing. Please set the CASHIER_WEBHOOK_USERNAME and CASHIER_WEBHOOK_PASSWORD environment variables.');
+            return;
+        }
         try {
             $webhookEndpoints = Cashier::chargebee()->webhookEndpoint();
 
@@ -54,8 +55,8 @@ class WebhookCommand extends Command
                 'url' => $this->option('url') ?: route('chargebee.webhook'),
                 'api_version' => $this->option('api-version') ?: "v2",
                 'name' =>  config('cashier.webhook.events') ?: self::DEFAULT_NAME . $this->generateShortTimestampSuffix(),
-                'basic_auth_password' => config('cashier.webhook.password') ?: self::DEFAULT_AUTH_PASSWORD,
-                'basic_auth_username' => config('cashier.webhook.username') ?: self::DEFAULT_AUTH_USERNAME,
+                'basic_auth_password' => config('cashier.webhook.password'),
+                'basic_auth_username' => config('cashier.webhook.username')
             ])->webhook_endpoint;
 
             $this->components->info('✅ The Chargebee webhook was created successfully.');
