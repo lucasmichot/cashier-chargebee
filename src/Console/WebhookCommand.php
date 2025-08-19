@@ -49,22 +49,22 @@ class WebhookCommand extends Command
         }
         try {
             $webhookEndpoints = Cashier::chargebee()->webhookEndpoint();
+            $disabled = $this->option('disabled');
 
             $endpoint = $webhookEndpoints->create([
                 'enabled_events' => config('cashier.webhook.events') ?: self::DEFAULT_EVENTS,
                 'url' => $this->option('url') ?: route('chargebee.webhook'),
                 'api_version' => $this->option('api-version') ?: "v2",
-                'name' =>  config('cashier.webhook.events') ?: self::DEFAULT_NAME . $this->generateShortTimestampSuffix(),
+                'name' =>  config('cashier.webhook.name') ?: self::DEFAULT_NAME . $this->generateShortTimestampSuffix(),
                 'basic_auth_password' => config('cashier.webhook.password'),
-                'basic_auth_username' => config('cashier.webhook.username')
+                'basic_auth_username' => config('cashier.webhook.username'),
+                'disabled' => $disabled,
             ])->webhook_endpoint;
 
             $this->components->info('✅ The Chargebee webhook was created successfully.');
             $this->components->info('🔐 Add the basic auth password and username in environment variables.');
 
             if ($this->option('disabled')) {
-                $webhookEndpoints->update($endpoint->id, ['disabled' => true]);
-
                 $this->components->info('The Chargebee webhook was disabled as requested. You may enable the webhook via the Chargebee dashboard when needed.');
             }
         } catch (\Exception $e) {
