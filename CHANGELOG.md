@@ -1,3 +1,7 @@
+### v1.2.0
+* * * 
+- Added atrisan command to automatically add the webhook in Chargebee dashboard. 
+
 ### v1.1.0 (2025-05-19)
 * * * 
 
