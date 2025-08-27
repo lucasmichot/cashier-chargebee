@@ -2,6 +2,7 @@
 
 namespace Chargebee\Cashier;
 
+use Chargebee\Cashier\Console\WebhookCommand;
 use Chargebee\Cashier\Contracts\InvoiceRenderer;
 use Chargebee\Cashier\Events\WebhookReceived;
 use Chargebee\Cashier\Invoices\DompdfInvoiceRenderer;
@@ -20,6 +21,7 @@ class CashierServiceProvider extends ServiceProvider
         $this->registerRoutes();
         $this->registerResources();
         $this->registerPublishing();
+        $this->registerCommands();
         if (config('cashier.site') && config('cashier.api_key')) {
             Cashier::configureEnvironment();
         }
@@ -107,6 +109,19 @@ class CashierServiceProvider extends ServiceProvider
             $this->publishes([
                 __DIR__.'/../resources/views' => $this->app->resourcePath('views/vendor/cashier'),
             ], 'cashier-views');
+        }
+    }
+    /**
+     * Register the package's commands.
+     *
+     * @return void
+     */
+    protected function registerCommands()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                WebhookCommand::class,
+            ]);
         }
     }
 }

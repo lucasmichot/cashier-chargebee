@@ -543,14 +543,53 @@ configuration allows Chargebee to send event notifications to your system.
 
 ### Configuring Webhooks in Chargebee
 
-To configure webhooks in Chargebee, follow the
-[Chargebee webhook documentation](https://www.chargebee.com/docs/2.0/webhook_settings.html).
-You should set up your webhook URL to point to your application's webhook
-endpoint, typically:
+You can configure webhooks using the Cashier command or directly in the Chargebee Dashboard.
 
+#### Using Artisan Command
+
+Run the following command to create a webhook in Chargebee:
+
+```sh
+php artisan cashier:create-webhook
 ```
-https://your-application.com/chargebee/webhook
+
+By default, the webhook URL will point to your application’s webhook endpoint, using the output of `route('chargebee.webhook')`, for example: 
 ```
+https://{{your-domain}}/chargebee/webhook
+```
+
+If you want to specify a different URL, use the `--url` flag:
+
+```sh
+php artisan cashier:create-webhook --url="https://{different-url}.com"
+```
+
+#### Additional Options
+
+* `--disabled` → Create the endpoint in disabled state.
+* `--api-version` → Specify the Chargebee [API version](https://www.chargebee.com/docs/billing/2.0/site-configuration/webhook_settings#api-version) the webhook should use .
+
+**Note:** The webhook name, enabled events, and basic authentication credentials (username and password) are configured through the Cashier configuration file generally present in `/config/cashier.php`. You can define them in your Cashier config as shown in the example below.
+```php
+ 'webhook' => [
+        'username' => env('CASHIER_WEBHOOK_USERNAME'), 
+        'password' => env('CASHIER_WEBHOOK_PASSWORD'), 
+        'events' => array_merge(
+        WebhookCommand::DEFAULT_EVENTS,
+        [
+            'payment_failed',
+            'payment_succeeded',
+        ]
+    ),
+    'name' => "your-webhook-name", 
+    ],
+```
+
+#### Using Chargebee Dashboard
+
+You can also configure webhooks directly in the Chargebee Dashboard.
+For detailed steps, refer to the [Chargebee webhook documentation](https://www.chargebee.com/docs/2.0/webhook_settings.html).
+
 
 <a name="route-configuration"></a>
 
