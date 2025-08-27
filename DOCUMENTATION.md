@@ -569,7 +569,21 @@ php artisan cashier:create-webhook --url="https://{different-url}.com"
 * `--disabled` → Create the endpoint in disabled state.
 * `--api-version` → Specify the Chargebee [API version](https://www.chargebee.com/docs/billing/2.0/site-configuration/webhook_settings#api-version) the webhook should use .
 
-**Note:** The webhook name, along with basic auth username and password, will be taken from the Cashier config.
+**Note:** The webhook name, enabled events, and basic authentication credentials (username and password) are configured through the Cashier configuration file generally present in `/config/cashier.php`. You can define them in your Cashier config as shown in the example below.
+```php
+ 'webhook' => [
+        'username' => env('CASHIER_WEBHOOK_USERNAME'), 
+        'password' => env('CASHIER_WEBHOOK_PASSWORD'), 
+        'events' => array_merge(
+        WebhookCommand::DEFAULT_EVENTS,
+        [
+            'payment_failed',
+            'payment_succeeded',
+        ]
+    ),
+    'name' => "your-webhook-name", 
+    ],
+```
 
 #### Using Chargebee Dashboard
 
