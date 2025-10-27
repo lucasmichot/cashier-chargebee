@@ -5,6 +5,7 @@ namespace Chargebee\Cashier\Listeners;
 use Carbon\Carbon;
 use Chargebee\Cashier\Cashier;
 use Chargebee\Cashier\Events\WebhookReceived;
+use Chargebee\Cashier\Feature;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -203,5 +204,99 @@ class HandleWebhookReceived
     protected function newSubscriptionType(array $payload): string
     {
         return 'default';
+    }
+
+    /**
+     * Handle the handle feature created event.
+     */
+    protected function handleFeatureCreated(array $payload)
+    {
+        $feature = $payload['content']['feature'];
+        Feature::updateOrCreate(
+            ['chargebee_id' => $feature['id']],
+            ['json_data' => $feature]
+        );
+        Log::info('Feature created successfully.', [
+            'chargebee_feature_id' => $payload['content']['feature']['id'],
+        ]);
+    }
+
+    /**
+     * Handle the feature deleted event.
+     */
+    protected function handleFeatureDeleted(array $payload)
+    {
+        $featureId = $payload['content']['feature']['id'];
+
+        if ($feature = Feature::find($featureId)) {
+            $feature->delete();
+
+            Log::info('Feature deleted successfully.', [
+                'chargebee_feature_id' => $featureId,
+            ]);
+        } else {
+            Log::info('Feature deletion attempted, but no matching feature found.', [
+                'chargebee_feature_id' => $featureId,
+            ]);
+        }
+    }
+
+    /**
+     * Handle the feature updated event.
+     */
+    protected function handleFeatureUpdated(array $payload)
+    {
+        $featureData = $payload['content']['feature'];
+        $featureId = $featureData['id'];
+
+        if ($feature = Feature::find($featureId)) {
+            $feature->update([
+                'json_data' => $featureData,
+            ]);
+
+            Log::info('Feature updated successfully.', [
+                'chargebee_feature_id' => $featureId,
+            ]);
+        } else {
+            Log::info('Feature update attempted, but no matching feature found.', [
+                'chargebee_feature_id' => $featureId,
+            ]);
+        }
+    }
+
+    /**
+     * Handle the feature activated event.
+     */
+    protected function handleFeatureActivated(array $payload)
+    {
+        $this->handleFeatureUpdated($payload);
+
+        Log::info('Feature activated event processed.', [
+            'chargebee_feature_id' => $payload['content']['feature']['id'],
+        ]);
+    }
+
+    /**
+     * Handle the feature archived event.
+     */
+    protected function handleFeatureArchived(array $payload)
+    {
+        $this->handleFeatureUpdated($payload);
+
+        Log::info('Feature archived event processed.', [
+            'chargebee_feature_id' => $payload['content']['feature']['id'],
+        ]);
+    }
+
+    /**
+     * Handle the feature reactivated event.
+     */
+    protected function handleFeatureReactivated(array $payload)
+    {
+        $this->handleFeatureUpdated($payload);
+
+        Log::info('Feature reactivated event processed.', [
+            'chargebee_feature_id' => $payload['content']['feature']['id'],
+        ]);
     }
 }
